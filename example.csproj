@@ -133,6 +133,7 @@
     <Compile Include="App_Start\WebApiConfig.cs" />
     <Compile Include="Controllers\HomeController.cs" />
     <Compile Include="Controllers\ProductsController.cs" />
+    <Compile Include="DAL\IShopContext.cs" />
     <Compile Include="DAL\ShopInitializer.cs" />
     <Compile Include="DAL\ShopContext.cs" />
     <Compile Include="Global.asax.cs">

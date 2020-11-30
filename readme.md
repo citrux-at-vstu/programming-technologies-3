@@ -89,3 +89,69 @@ namespace example.Controllers.Tests
         public ActionResult Index()
         ...
 ```
+
+### 4. Мокирование IShopContext
+
+Теперь создадим свой ShopContext со свойством Products на основе списка. Для этого модифицируем код в классе теста:
+
+```c#
+    public class HomeControllerTests
+    {
+        private IShopContext db;
+
+        [TestInitialize()]
+        public void Setup()
+        {
+            db = Substitute.For<IShopContext>();
+
+            var data = new List<Product> { new Product { ID = 1, Name = "Table", Price = 1 } }.AsQueryable();
+            var products = Substitute.For<DbSet<Product>, IQueryable<Product>>();
+            ((IQueryable<Product>)products).Provider.Returns(data.Provider);
+            ((IQueryable<Product>)products).Expression.Returns(data.Expression);
+            ((IQueryable<Product>)products).ElementType.Returns(data.ElementType);
+            ((IQueryable<Product>)products).GetEnumerator().Returns(_ => data.GetEnumerator());
+            products.AsNoTracking().Returns(products);
+
+            db.Products = products;
+        }
+        [TestMethod()]
+        public void BuyTest()
+        {
+            var controller = new HomeController(db);
+            int id = 1;
+            var result = controller.Buy(id) as ViewResult;
+            Assert.AreEqual(id, result.ViewData["ProductId"]);
+        }
+```
+
+Не забываем добавить нужные ссылки на сборку и директивы using.
+
+Метод Setup будет вызываться перед выполнением теста, чтобы подготовить состояние базы. Запустим BuyTest и убедимся, что пока ничего не поломали.
+
+Остановимся подробнее на магии, которая здесть происходит. Строчка
+```c#
+db = Substitute.For<IShopContext>();
+```
+создаёт объект-заглушку, удовлетворяющую интерфейсу IShopContext. Аналогично,
+```c#
+var products = Substitute.For<DbSet<Product>, IQueryable<Product>>();
+```
+создаёт заглушку, выглядяшую как настоящий DbSet, а страшный код после делает так, чтобы элементы хранились в списке data. Наконец, строка
+```c#
+db.Products = products;
+```
+всталяет одну заглушку в другую.
+
+Теперь мы можем написать тест для метода Index:
+
+```c#
+        [TestMethod()]
+        public void IndexTest()
+        {
+            var controller = new HomeController(db);
+            var result = controller.Index() as ViewResult;
+            CollectionAssert.AreEqual(db.Products.ToList(), ((IEnumerable<Product>)result.ViewBag.Products).ToList());
+        }
+```
+
+Тест проходит, все счастливы.
