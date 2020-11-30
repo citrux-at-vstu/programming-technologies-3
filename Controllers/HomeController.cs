@@ -10,7 +10,12 @@ namespace example.Controllers
 {
     public class HomeController : Controller
     {
-        private ShopContext db = new ShopContext();
+        private IShopContext db;
+        public HomeController(IShopContext context)
+        {
+            db = context;
+        }
+        public HomeController() : this(new ShopContext()) { }
         public ActionResult Index()
         {
             IEnumerable<Product> products = db.Products;

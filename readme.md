@@ -51,3 +51,41 @@ namespace example.Controllers.Tests
 Суть юнит-теста в изолированном тестировании кода. Но зачастую нельзя просто так взять и изолировать функцию. В нашем примере метод контроллера `public ActionResult Index()` получает информацию из базы. В целях лучшей тестируемости было бы неплохо заменить реальную базу чем-то легко настраиваемым и предоставляющим тот же интерфейс -- моком.
 
 Для создания моков будем использовать библиотеку NSubstitute. Установим её через Nuget.
+
+### 4. Моки. Выделение интерфейса IShopContext
+
+Взаимодействие с базой у нас реализовано через класс ShopContext. Только вот NSubstitute для создания мока требует интерфейс, а не класс. Поэтому выделим интерфейс IShopContext:
+
+```c#
+    public interface IShopContext
+    {
+        DbSet<Product> Products { get; set; }
+        DbSet<Purchase> Purchases { get; set; }
+        int SaveChanges();
+    }
+```
+
+Определение ShopContext примет вид:
+
+```c#
+    public class ShopContext : DbContext, IShopContext
+    {
+        public DbSet<Product> Products { get; set; }
+        public DbSet<Purchase> Purchases { get; set; }
+    }
+```
+
+Теперь изменим код контроллера HomeController:
+
+```c#
+    public class HomeController : Controller
+    {
+        private IShopContext db;
+        public HomeController(IShopContext context)
+        {
+            db = context;
+        }
+        public HomeController() : this(new ShopContext()) { }
+        public ActionResult Index()
+        ...
+```

@@ -7,7 +7,7 @@ using example.Models;
 
 namespace example.DAL
 {
-    public class ShopContext: DbContext
+    public class ShopContext : DbContext, IShopContext
     {
         public DbSet<Product> Products { get; set; }
         public DbSet<Purchase> Purchases { get; set; }
