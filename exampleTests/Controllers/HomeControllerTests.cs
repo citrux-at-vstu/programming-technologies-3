@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Web.Mvc;
 
 namespace example.Controllers.Tests
 {
@@ -14,7 +15,10 @@ namespace example.Controllers.Tests
         [TestMethod()]
         public void BuyTest()
         {
-            Assert.Fail();
+            var controller = new HomeController();
+            int id = 1;
+            var result = controller.Buy(id) as ViewResult;
+            Assert.AreEqual(id, result.ViewData["ProductId"]);
         }
     }
 }
